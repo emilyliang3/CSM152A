@@ -21,6 +21,7 @@
 module vga640x480(
 	input wire dclk,			//pixel clock: 25MHz
 	input wire clr,			//asynchronous reset
+	input wire [1:0] pos,
 	output wire hsync,		//horizontal sync out
 	output wire vsync,		//vertical sync out
 	output reg [2:0] red,	//red vga output
@@ -33,8 +34,8 @@ parameter hpixels = 800;// horizontal pixels per line
 parameter vlines = 521; // vertical lines per frame
 parameter hpulse = 96; 	// hsync pulse length
 parameter vpulse = 2; 	// vsync pulse length
-parameter hbp = 144; 	// end of horizontal back porch
-parameter hfp = 784; 	// beginning of horizontal front porch
+parameter hbp = 310; 	// end of horizontal back porch
+parameter hfp = 790; 	// beginning of horizontal front porch
 parameter vbp = 31; 		// end of vertical back porch
 parameter vfp = 511; 	// beginning of vertical front porch
 // active horizontal video is therefore: 784 - 144 = 640
@@ -43,6 +44,46 @@ parameter vfp = 511; 	// beginning of vertical front porch
 // registers for storing the horizontal & vertical counters
 reg [9:0] hc;
 reg [9:0] vc;
+wire [1:0] pos;
+
+//assign pos = {550,270};
+// Define color lists
+reg [2:0] color_r [0:7];   // Red color list
+reg [2:0] color_g [0:7];   // Green color list
+reg [2:0] color_b [0:7];   // Blue color list
+
+// Initialize color lists with desired colors
+initial begin
+    //white
+    color_r[0] = 3'b111;  // Red
+    color_g[0] = 3'b111;  // Green
+    color_b[0] = 3'b111;  // Blue
+
+    //red
+    color_r[1] = 3'b111;  // Red
+    color_g[1] = 3'b000;  // Green
+    color_b[1] = 3'b000;  // Blue
+
+    //orange
+    color_r[2] = 3'b110;  // Red
+    color_g[2] = 3'b011;  // Green
+    color_b[2] = 3'b000;  // Blue
+    
+    //yellow
+end
+//Yellow:
+//Yellow is a mix of red and green with less blue. We can blend red and green:
+//3'b111: High intensity red
+//3'b111: High intensity green
+//Green:
+//3'b011: High intensity green
+//Blue:
+//3'b100: Highest intensity blue
+//Purple:
+//Purple is a mix of red and blue. We can blend red and blue:
+//3'b111: High intensity red
+//3'b100: Highest intensity blue
+
 
 // Horizontal & vertical counters --
 // this is how we keep track of where we are on the screen.
@@ -98,67 +139,68 @@ assign vsync = (vc < vpulse) ? 0:1;
 always @(*)
 begin
 	// first check if we're within vertical active video range
+    
 	if (vc >= vbp && vc < vfp)
 	begin
 		// now display different colors every 80 pixels
 		// while we're within the active horizontal range
 		// -----------------
 		// display white bar
-		if (hc >= hbp && hc < (hbp+80))
+        if (hc >= hbp && hc < hfp)
 		begin
 			red = 3'b111;
 			green = 3'b111;
 			blue = 3'b111;
 		end
-		// display yellow bar
-		else if (hc >= (hbp+80) && hc < (hbp+160))
-		begin
-			red = 3'b111;
-			green = 3'b111;
-			blue = 3'b000;
-		end
-		// display cyan bar
-		else if (hc >= (hbp+160) && hc < (hbp+240))
-		begin
-			red = 3'b000;
-			green = 3'b111;
-			blue = 3'b111;
-		end
-		// display green bar
-		else if (hc >= (hbp+240) && hc < (hbp+320))
-		begin
-			red = 3'b000;
-			green = 3'b111;
-			blue = 3'b000;
-		end
-		// display magenta bar
-		else if (hc >= (hbp+320) && hc < (hbp+400))
-		begin
-			red = 3'b111;
-			green = 3'b000;
-			blue = 3'b111;
-		end
-		// display red bar
-		else if (hc >= (hbp+400) && hc < (hbp+480))
-		begin
-			red = 3'b111;
-			green = 3'b000;
-			blue = 3'b000;
-		end
-		// display blue bar
-		else if (hc >= (hbp+480) && hc < (hbp+560))
-		begin
-			red = 3'b000;
-			green = 3'b000;
-			blue = 3'b111;
-		end
-		// display black bar
-		else if (hc >= (hbp+560) && hc < (hbp+640))
-		begin
-			red = 4'b000;
-			green = 4'b000;
-			blue = 4'b000;
-		end
+//		// display yellow bar
+//		else if (hc >= (hbp+80) && hc < (hbp+160))
+//		begin
+//			red = 3'b111;
+//			green = 3'b111;
+//			blue = 3'b000;
+//		end
+//		// display cyan bar
+//		else if (hc >= (hbp+160) && hc < (hbp+240))
+//		begin
+//			red = 3'b000;
+//			green = 3'b111;
+//			blue = 3'b111;
+//		end
+//		// display green bar
+//		else if (hc >= (hbp+240) && hc < (hbp+320))
+//		begin
+//			red = 3'b000;
+//			green = 3'b111;
+//			blue = 3'b000;
+//		end
+//		// display magenta bar
+//		else if (hc >= (hbp+320) && hc < (hbp+400))
+//		begin
+//			red = 3'b111;
+//			green = 3'b000;
+//			blue = 3'b111;
+//		end
+//		// display red bar
+//		else if (hc >= (hbp+400) && hc < (hbp+480))
+//		begin
+//			red = 3'b111;
+//			green = 3'b000;
+//			blue = 3'b000;
+//		end
+//		// display blue bar
+//		else if (hc >= (hbp+480) && hc < (hbp+560))
+//		begin
+//			red = 3'b000;
+//			green = 3'b000;
+//			blue = 3'b111;
+//		end
+//		// display black bar
+//		else if (hc >= (hbp+560) && hc < (hbp+640))
+//		begin
+//			red = 3'b111;
+//            green = 3'b111;
+//            blue = 3'b111;
+//		end
 		// we're outside active horizontal range so display black
 		else
 		begin
@@ -174,6 +216,12 @@ begin
 		green = 0;
 		blue = 0;
 	end
+	if (vc >= pos[1]-20 && vc < pos[1]+20 && hc >= pos[0]-20 && pos[0]+20)
+    begin
+        red = 3'b000;
+        green = 3'b111;
+        blue = 3'b111;
+    end
 end
 
 endmodule
