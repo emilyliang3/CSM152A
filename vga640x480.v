@@ -21,12 +21,14 @@
 module vga640x480(
 	input wire dclk,			//pixel clock: 25MHz
 	input wire clr,			//asynchronous reset
-	input wire [1:0] pos,
+//	input wire [1:0] pos,
 	output wire hsync,		//horizontal sync out
 	output wire vsync,		//vertical sync out
-	output reg [2:0] red,	//red vga output
-	output reg [2:0] green, //green vga output
-	output reg [2:0] blue	//blue vga output
+	output reg [3:0] red,	//red vga output
+	output reg [3:0] green, //green vga output
+	output reg [3:0] blue,	//blue vga output
+	input wire [9:0] X_POS,
+    input wire [9:0] Y_POS
 	);
 
 // video structure constants
@@ -38,53 +40,98 @@ parameter hbp = 310; 	// end of horizontal back porch
 parameter hfp = 790; 	// beginning of horizontal front porch
 parameter vbp = 31; 		// end of vertical back porch
 parameter vfp = 511; 	// beginning of vertical front porch
+//assign X_POS = X_POS + 38;
+//assign Y_POS = Y_POS - 241;
 // active horizontal video is therefore: 784 - 144 = 640
 // active vertical video is therefore: 511 - 31 = 480
 
 // registers for storing the horizontal & vertical counters
 reg [9:0] hc;
 reg [9:0] vc;
-wire [1:0] pos;
 
-//assign pos = {550,270};
+//wire [1:0] pos;
+
+//assign pos = {550,271};
 // Define color lists
-reg [2:0] color_r [0:7];   // Red color list
-reg [2:0] color_g [0:7];   // Green color list
-reg [2:0] color_b [0:7];   // Blue color list
+reg [3:0] color_r [0:7];   // Red color list
+reg [3:0] color_g [0:7];   // Green color list
+reg [3:0] color_b [0:7];   // Blue color list
 
 // Initialize color lists with desired colors
 initial begin
     //white
-    color_r[0] = 3'b111;  // Red
-    color_g[0] = 3'b111;  // Green
-    color_b[0] = 3'b111;  // Blue
+    color_r[0] = 4'b1111;  // Red
+    color_g[0] = 4'b1111;  // Green
+    color_b[0] = 4'b1111;  // Blue
 
     //red
-    color_r[1] = 3'b111;  // Red
-    color_g[1] = 3'b000;  // Green
-    color_b[1] = 3'b000;  // Blue
+    color_r[1] = 4'b1111;  // Red
+    color_g[1] = 4'b0000;  // Green
+    color_b[1] = 4'b0000;  // Blue
 
     //orange
-    color_r[2] = 3'b110;  // Red
-    color_g[2] = 3'b011;  // Green
-    color_b[2] = 3'b000;  // Blue
+    color_r[2] = 4'b1111;  // Red
+    color_g[2] = 4'b1000;  // Green
+    color_b[2] = 4'b0000;  // Blue
     
     //yellow
+    color_r[3] = 4'b1111;  // Red
+    color_g[3] = 4'b1111;  // Green
+    color_b[3] = 4'b0000;  // Blue
+    
+    //green
+    color_r[4] = 4'b0000;  // Red
+    color_g[4] = 4'b1111;  // Green
+    color_b[4] = 4'b0000;  // Blue
+    
+    //blue
+    color_r[5] = 4'b0000;  // Red
+    color_g[5] = 4'b0000;  // Green
+    color_b[5] = 4'b1111;  // Blue
+    
+    //purple
+    color_r[6] = 4'b1100;  // Red
+    color_g[6] = 4'b0000;  // Green
+    color_b[6] = 4'b1100;  // Blue
+    
+    //black
+    color_r[7] = 4'b0000;  // Red
+    color_g[7] = 4'b0000;  // Green
+    color_b[7] = 4'b0000;  // Blue
 end
-//Yellow:
-//Yellow is a mix of red and green with less blue. We can blend red and green:
-//3'b111: High intensity red
-//3'b111: High intensity green
-//Green:
-//3'b011: High intensity green
-//Blue:
-//3'b100: Highest intensity blue
-//Purple:
-//Purple is a mix of red and blue. We can blend red and blue:
-//3'b111: High intensity red
-//3'b100: Highest intensity blue
 
-
+// block ram
+reg [3:0] buffer_red [0:479][0:479];
+reg [3:0] buffer_green [0:479][0:479];
+reg [3:0] buffer_blue [0:479][0:479];
+//genvar i, j;
+//generate
+//    // Initialize buffer_red
+//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_RED
+//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_RED_COL
+//            initial begin
+//                buffer_red[i][j] = color_r[0]; // Example value, replace with your desired initialization value
+//            end
+//        end
+//    end
+//        // Initialize buffer_green
+//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_GREEN
+//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_GREEN_COL
+//            initial begin
+//                buffer_green[i][j] = color_g[0]; // Example value, replace with your desired initialization value
+//            end
+//        end
+//    end
+    
+//    // Initialize buffer_blue
+//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_BLUE
+//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_BLUE_COL
+//            initial begin
+//                buffer_blue[i][j] = color_b[0]; // Example value, replace with your desired initialization value
+//            end
+//        end
+//    end
+//    endgenerate
 // Horizontal & vertical counters --
 // this is how we keep track of where we are on the screen.
 // ------------------------
@@ -148,59 +195,11 @@ begin
 		// display white bar
         if (hc >= hbp && hc < hfp)
 		begin
-			red = 3'b111;
-			green = 3'b111;
-			blue = 3'b111;
+            red = buffer_red[hc - 310][vc - 31];
+            green = buffer_green[hc - 310][vc - 31];
+            blue = buffer_blue[hc - 310][vc - 31];
+
 		end
-//		// display yellow bar
-//		else if (hc >= (hbp+80) && hc < (hbp+160))
-//		begin
-//			red = 3'b111;
-//			green = 3'b111;
-//			blue = 3'b000;
-//		end
-//		// display cyan bar
-//		else if (hc >= (hbp+160) && hc < (hbp+240))
-//		begin
-//			red = 3'b000;
-//			green = 3'b111;
-//			blue = 3'b111;
-//		end
-//		// display green bar
-//		else if (hc >= (hbp+240) && hc < (hbp+320))
-//		begin
-//			red = 3'b000;
-//			green = 3'b111;
-//			blue = 3'b000;
-//		end
-//		// display magenta bar
-//		else if (hc >= (hbp+320) && hc < (hbp+400))
-//		begin
-//			red = 3'b111;
-//			green = 3'b000;
-//			blue = 3'b111;
-//		end
-//		// display red bar
-//		else if (hc >= (hbp+400) && hc < (hbp+480))
-//		begin
-//			red = 3'b111;
-//			green = 3'b000;
-//			blue = 3'b000;
-//		end
-//		// display blue bar
-//		else if (hc >= (hbp+480) && hc < (hbp+560))
-//		begin
-//			red = 3'b000;
-//			green = 3'b000;
-//			blue = 3'b111;
-//		end
-//		// display black bar
-//		else if (hc >= (hbp+560) && hc < (hbp+640))
-//		begin
-//			red = 3'b111;
-//            green = 3'b111;
-//            blue = 3'b111;
-//		end
 		// we're outside active horizontal range so display black
 		else
 		begin
@@ -216,11 +215,11 @@ begin
 		green = 0;
 		blue = 0;
 	end
-	if (vc >= pos[1]-20 && vc < pos[1]+20 && hc >= pos[0]-20 && pos[0]+20)
+	if (vc >= Y_POS - 241 - 5 && vc < Y_POS - 241 +5 && hc >= X_POS + 38 - 5 && hc < X_POS + 38 +5)
     begin
-        red = 3'b000;
-        green = 3'b111;
-        blue = 3'b111;
+        buffer_red[hc - 310][vc - 31] = color_r[2];
+        buffer_red[hc - 310][vc - 31] = color_g[2];
+        buffer_red[hc - 310][vc - 31] = color_b[2];
     end
 end
 
