@@ -60,8 +60,10 @@ wire SCLK;                    // Serial clock that controls communication
 wire [2:0] led;                // Status of PmodJSTK buttons displayed on LEDs
 wire [3:0] an;                // Anodes for Seven Segment Display
 wire [6:0] seg;            // Cathodes for Seven Segment Display
+wire [9:0] x_pos;
+wire [9:0] y_pos;
 
-PmodJSTK_Demo joystick(.CLK(clk),.RST(clr),.MISO(MISO),.SW(sw),.SS(SS),.MOSI(MOSI),.SCLK(SCLK),.LED(led),.AN(an),.SEG(seg));
+PmodJSTK_Demo joystick(.CLK(clk),.RST(clr),.MISO(MISO),.SW(sw),.SS(SS),.MOSI(MOSI),.SCLK(SCLK),.LED(led),.AN(an),.SEG(seg), .X_POS(x_pos), .Y_POS(y_pos));
 NERP_demo_top screen(.clk(clk),.clr(clr), .red(red),.green(green),.blue(blue),.hsync(hsync),.vsync(vsync));
 
 

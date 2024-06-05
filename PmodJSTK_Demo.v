@@ -45,7 +45,9 @@ module PmodJSTK_Demo(
     SCLK,
     LED,
 	 AN,
-	 SEG
+	 SEG,
+	 X_POS,
+	 Y_POS
     );
 
 	// ===========================================================================
@@ -61,7 +63,8 @@ module PmodJSTK_Demo(
 			output [2:0] LED;			// LEDs 2, 1, and 0
 			output [3:0] AN;			// Anodes for Seven Segment Display
 			output [6:0] SEG;			// Cathodes for Seven Segment Display
-//            output [39:0] cursor_pos;
+            output [9:0] X_POS;
+            output [9:0] Y_POS;
 
 	// ===========================================================================
 	// 							  Parameters, Regsiters, and Wires
@@ -84,12 +87,6 @@ module PmodJSTK_Demo(
 
 			// Signal carrying output data that user selected
 			wire [9:0] posData;
-			
-//			reg [39:0] cursor_pos_reg = 40'b0;
-			reg [9:0] x_pos_reg = 10'd500;
-			reg [9:0] x_pos_raw = 10'd0;
-			reg [9:0] y_pos_reg = 10'd500;
-			reg [9:0] y_pos_raw = 10'd0;
 
 	// ===========================================================================
 	// 										Implementation
@@ -135,58 +132,24 @@ module PmodJSTK_Demo(
 					.CLKOUT(sndRec)
 			);
 			
-            always @(posedge CLK) begin
-                x_pos_raw <= {jstkData[9:8], jstkData[23:16]};
-                if (x_pos_raw < 470) begin
-//                    if ((10'd470 - x_pos_raw) >= x_pos_reg)
-//                        x_pos_reg <= 10'b0;
-//                    else
-//                        x_pos_reg <= x_pos_reg - (10'd470 - x_pos_raw);
-                        if (x_pos_reg > 0)
-                            x_pos_reg <= x_pos_reg - 10'd1;
-                end
-                if (x_pos_raw > 530) begin
-//                    if ((x_pos_raw - 10'd530) >= (10'd1023 - x_pos_reg))
-//                        x_pos_reg <= 10'd1023;
-//                    else
-//                        x_pos_reg <= x_pos_reg + (x_pos_raw - 10'd530);
-                    if (x_pos_reg <1023)
-                        x_pos_reg <= x_pos_reg + 10'd1;
-                end
-                
-                y_pos_raw <= {jstkData[25:24], jstkData[39:32]};
-                if (y_pos_raw < 470) begin
-//                    if ((10'd470 - y_pos_raw) >= y_pos_reg)
-//                        y_pos_reg <= 10'b0;
-//                    else
-                    if (y_pos_reg > 0)
-                        y_pos_reg <= y_pos_reg - 10'd1;
-                end
-                if (y_pos_raw > 530) begin
-//                    if ((y_pos_raw - 10'd530) >= (10'd1023 - y_pos_reg))
-//                        y_pos_reg <= 10'd1023;
-//                    else
-                    if (y_pos_reg < 1023)
-                        y_pos_reg <= y_pos_reg + 10'd1;
-                end
-            end
+
+            assign X_POS = {jstkData[9:8], jstkData[23:16]};
+            assign Y_POS = {jstkData[25:24], jstkData[39:32]};
 
 			// Use state of switch 0 to select output of X position or Y position data to SSD
-			assign posData = (SW[0] == 1'b1) ? x_pos_reg : y_pos_reg;
+			assign posData = (SW[0] == 1'b1) ? {jstkData[9:8], jstkData[23:16]} : {jstkData[25:24], jstkData[39:32]};
 
 			// Data to be sent to PmodJSTK, lower two bits will turn on leds on PmodJSTK
 			assign sndData = {8'b100000, {SW[1], SW[2]}};
 
 			// Assign PmodJSTK button status to LED[2:0]
-			always @(sndRec or RST or jstkData) begin
-					if(RST == 1'b1) begin
-//					        x_pos_reg <= 10'd500;
-//					        y_pos_reg <= 10'd500;
-							LED <= 3'b000;
-					end
-					else begin
-							LED <= {jstkData[1], {jstkData[2], jstkData[0]}};
-					end
-			end
+//			always @(sndRec or RST or jstkData) begin
+//					if(RST == 1'b1) begin
+//							LED <= 3'b000;
+//					end
+//					else begin
+//							LED <= {jstkData[1], {jstkData[2], jstkData[0]}};
+//					end
+//			end
 
 endmodule
