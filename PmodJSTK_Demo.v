@@ -43,7 +43,6 @@ module PmodJSTK_Demo(
     SS,
     MOSI,
     SCLK,
-    LED,
 	 AN,
 	 SEG,
 	 X_POS,
@@ -60,7 +59,6 @@ module PmodJSTK_Demo(
 			output SS;					// Slave Select, Pin 1, Port JA
 			output MOSI;				// Master Out Slave In, Pin 2, Port JA
 			output SCLK;				// Serial Clock, Pin 4, Port JA
-			output [2:0] LED;			// LEDs 2, 1, and 0
 			output [3:0] AN;			// Anodes for Seven Segment Display
 			output [6:0] SEG;			// Cathodes for Seven Segment Display
             output [9:0] X_POS;
@@ -72,7 +70,6 @@ module PmodJSTK_Demo(
 			wire SS;						// Active low
 			wire MOSI;					// Data transfer from master to slave
 			wire SCLK;					// Serial clock that controls communication
-			reg [2:0] LED;				// Status of PmodJSTK buttons displayed on LEDs
 			wire [3:0] AN;				// Anodes for Seven Segment Display
 			wire [6:0] SEG;			// Cathodes for Seven Segment Display
 
@@ -141,15 +138,5 @@ module PmodJSTK_Demo(
 
 			// Data to be sent to PmodJSTK, lower two bits will turn on leds on PmodJSTK
 			assign sndData = {8'b100000, {SW[1], SW[2]}};
-
-			// Assign PmodJSTK button status to LED[2:0]
-//			always @(sndRec or RST or jstkData) begin
-//					if(RST == 1'b1) begin
-//							LED <= 3'b000;
-//					end
-//					else begin
-//							LED <= {jstkData[1], {jstkData[2], jstkData[0]}};
-//					end
-//			end
 
 endmodule
