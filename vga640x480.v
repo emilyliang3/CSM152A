@@ -164,7 +164,7 @@ begin
 	begin
 		// display white canvas
         if (hc >= hbp && hc < hfp) begin
-        if (vc/10 >= Y_POS/10 - 12 && vc/10 <= Y_POS/10 - 12 && hc/10 >= X_POS/10 + 2 && hc/10 <= X_POS/10 + 2)
+        if (vc/10 >= Y_POS/10 - 24 && vc/10 <= Y_POS/10 - 24 && hc/10 >= X_POS/10 + 4 && hc/10 <= X_POS/10 + 4)
             begin
         //        buffer_red[hc/10 - 31][vc/10 - 3] = color_r[2];
         //        buffer_red[hc/10 - 310][vc/10 - 31] = color_g[2];
