@@ -28,7 +28,8 @@ module vga640x480(
 	output reg [3:0] green, //green vga output
 	output reg [3:0] blue,	//blue vga output
 	input wire [9:0] X_POS,
-    input wire [9:0] Y_POS
+    input wire [9:0] Y_POS,
+    input wire [2:0] color
 	);
 
 // video structure constants
@@ -40,8 +41,10 @@ parameter hbp = 310; 	// end of horizontal back porch
 parameter hfp = 790; 	// beginning of horizontal front porch
 parameter vbp = 31; 		// end of vertical back porch
 parameter vfp = 511; 	// beginning of vertical front porch
-//assign X_POS = X_POS + 38;
-//assign Y_POS = Y_POS - 241;
+//assign Y_POS = Y_POS/10;
+//assign X_POS = X_POS/10;
+//assign X_POS = X_POS + 4;
+//assign Y_POS = Y_POS - 24;
 // active horizontal video is therefore: 784 - 144 = 640
 // active vertical video is therefore: 511 - 31 = 480
 
@@ -56,6 +59,7 @@ reg [9:0] vc;
 reg [3:0] color_r [0:7];   // Red color list
 reg [3:0] color_g [0:7];   // Green color list
 reg [3:0] color_b [0:7];   // Blue color list
+
 
 // Initialize color lists with desired colors
 initial begin
@@ -101,44 +105,21 @@ initial begin
 end
 
 // block ram
-reg [3:0] buffer_red [0:479][0:479];
-reg [3:0] buffer_green [0:479][0:479];
-reg [3:0] buffer_blue [0:479][0:479];
-//genvar i, j;
-//generate
-//    // Initialize buffer_red
-//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_RED
-//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_RED_COL
-//            initial begin
-//                buffer_red[i][j] = color_r[0]; // Example value, replace with your desired initialization value
-//            end
-//        end
-//    end
-//        // Initialize buffer_green
-//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_GREEN
-//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_GREEN_COL
-//            initial begin
-//                buffer_green[i][j] = color_g[0]; // Example value, replace with your desired initialization value
-//            end
-//        end
-//    end
-    
-//    // Initialize buffer_blue
-//    for (i = 0; i < 480; i = i + 1) begin : INIT_BUFFER_BLUE
-//        for (j = 0; j < 480; j = j + 1) begin : INIT_BUFFER_BLUE_COL
-//            initial begin
-//                buffer_blue[i][j] = color_b[0]; // Example value, replace with your desired initialization value
-//            end
-//        end
-//    end
-//    endgenerate
+reg [2:0] buffer_pixels [0:47][0:47];
+genvar i, j;
+generate
+    // Initialize buffer_red
+    for (i = 0; i < 48; i = i + 1) begin : INIT_BUFFER_RED
+        for (j = 0; j < 48; j = j + 1) begin : INIT_BUFFER_RED_COL
+            initial begin
+                buffer_pixels[i][j] = 3'd0; // Example value, replace with your desired initialization value
+            end
+        end
+    end
+
+    endgenerate
 // Horizontal & vertical counters --
 // this is how we keep track of where we are on the screen.
-// ------------------------
-// Sequential "always block", which is a block that is
-// only triggered on signal transitions or "edges".
-// posedge = rising edge  &  negedge = falling edge
-// Assignment statements can only be used on type "reg" and need to be of the "non-blocking" type: <=
 always @(posedge dclk or posedge clr)
 begin
 	// reset condition
@@ -170,34 +151,47 @@ end
 
 // generate sync pulses (active low)
 // ----------------
-// "assign" statements are a quick way to
-// give values to variables of type: wire
 assign hsync = (hc < hpulse) ? 0:1;
 assign vsync = (vc < vpulse) ? 0:1;
 
 // display 100% saturation colorbars
 // ------------------------
-// Combinational "always block", which is a block that is
-// triggered when anything in the "sensitivity list" changes.
-// The asterisk implies that everything that is capable of triggering the block
-// is automatically included in the sensitivty list.  In this case, it would be
-// equivalent to the following: always @(hc, vc)
-// Assignment statements can only be used on type "reg" and should be of the "blocking" type: =
 always @(*)
 begin
 	// first check if we're within vertical active video range
     
 	if (vc >= vbp && vc < vfp)
 	begin
-		// now display different colors every 80 pixels
-		// while we're within the active horizontal range
-		// -----------------
-		// display white bar
-        if (hc >= hbp && hc < hfp)
-		begin
-            red = buffer_red[hc - 310][vc - 31];
-            green = buffer_green[hc - 310][vc - 31];
-            blue = buffer_blue[hc - 310][vc - 31];
+		// display white canvas
+        if (hc >= hbp && hc < hfp) begin
+        if (vc/10 >= Y_POS/10 - 12 && vc/10 <= Y_POS/10 - 12 && hc/10 >= X_POS/10 + 2 && hc/10 <= X_POS/10 + 2)
+            begin
+        //        buffer_red[hc/10 - 31][vc/10 - 3] = color_r[2];
+        //        buffer_red[hc/10 - 310][vc/10 - 31] = color_g[2];
+        //        buffer_red[hc/10 - 310][vc/10 - 31] = color_b[2];
+                  buffer_pixels[hc/10 - 31][vc/10 - 3] = color;
+        //          red = color_r[1];
+        //          green = color_g[1];
+        //          blue = color_b[1];
+            end
+         
+		else if (buffer_pixels[hc/10 - 31][vc/10 - 3] == 3'd0) begin
+		  red = color_r[0];
+		  green = color_g[0];
+		  blue = color_b[0];
+//            red = buffer_red[hc/10 - 31][vc/10 - 3];
+ //           green = buffer_green[hc/10 - 31][vc/10 - 3];
+  //          blue = buffer_blue[hc/10 - 31][vc/10 - 3];
+//              red = 4'b0000;
+//              green = 4'b0000;
+//              blue = 4'b0000;
+        end
+        else begin
+            red = color_r[1];
+            green = color_g[1];
+            blue = color_b[1];
+        end
+              
 
 		end
 		// we're outside active horizontal range so display black
@@ -215,12 +209,7 @@ begin
 		green = 0;
 		blue = 0;
 	end
-	if (vc >= Y_POS - 241 - 5 && vc < Y_POS - 241 +5 && hc >= X_POS + 38 - 5 && hc < X_POS + 38 +5)
-    begin
-        buffer_red[hc - 310][vc - 31] = color_r[2];
-        buffer_red[hc - 310][vc - 31] = color_g[2];
-        buffer_red[hc - 310][vc - 31] = color_b[2];
-    end
+
 end
 
 endmodule

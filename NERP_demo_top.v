@@ -30,7 +30,8 @@ module NERP_demo_top(
 	output wire hsync,		//horizontal sync out
 	output wire vsync,			//vertical sync out
 	input wire [9:0] X_POS,
-	input wire [9:0] Y_POS
+	input wire [9:0] Y_POS,
+	input wire [2:0] color
 	);
 
 // 7-segment clock interconnect
@@ -68,7 +69,8 @@ vga640x480 U3(
 	.green(green),
 	.blue(blue),
 	.X_POS(X_POS),
-	.Y_POS(Y_POS)
+	.Y_POS(Y_POS),
+	.color(color)
 	);
 
 endmodule

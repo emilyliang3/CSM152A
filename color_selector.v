@@ -9,10 +9,10 @@ module color_selector(
     
     always @(posedge clk) begin
     if (tool_sel == 1)
-        color <= 3'b111; //white (erase)
+        color <= 3'b000; //white (erase)
     else begin
         if (sw[0] == 1)
-            color <= 3'b000; //black
+            color <= 3'b111; //black
         if (sw[1] == 1)
             color <= 3'b001; //red
         if (sw[2] == 1)
