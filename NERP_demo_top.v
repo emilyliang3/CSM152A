@@ -65,20 +65,20 @@ segdisplay U2(
 	);
 
 // VGA controller
-//vga640x480 U3(
-//    .clk(clk),
-//	.dclk(dclk),
-//	.clr(clr),
-//	.hsync(hsync),
-//	.vsync(vsync),
-//	.red(red),
-//	.green(green),
-//	.blue(blue),
-//	.X_POS(X_POS),
-//	.Y_POS(Y_POS),
-//	.color(color),
-//	.tool_on(tool_on),
-//	.size_sel(size_sel)
-//	);
+vga640x480 U3(
+    .clk(clk),
+	.dclk(dclk),
+	.clr(clr),
+	.hsync(hsync),
+	.vsync(vsync),
+	.red(red),
+	.green(green),
+	.blue(blue),
+	.X_POS(X_POS),
+	.Y_POS(Y_POS),
+	.color(color),
+	.tool_on(tool_on),
+	.size_sel(size_sel)
+	);
 
 endmodule
