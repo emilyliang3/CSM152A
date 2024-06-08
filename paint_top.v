@@ -89,8 +89,10 @@ switch sw_blue(.clk(clk), .sw(swc[5]), .switch_out(color_sel[5]));
 switch sw_purp(.clk(clk), .sw(swc[6]), .switch_out(color_sel[6]));
 
 color_selector colors(.clk(clk), .sw(color_sel), .tool_sel(tool_sel), .color(color));
-PmodJSTK_Demo joystick(.CLK(clk),.RST(clr),.MISO(MISO),.SW(sw),.SS(SS),.MOSI(MOSI),.SCLK(SCLK),.AN(an),.SEG(seg), .X_POS(x_pos), .Y_POS(y_pos));
-NERP_demo_top screen(.clk(clk),.clr(clr), .red(red),.green(green),.blue(blue),.hsync(hsync),.vsync(vsync), .X_POS(x_pos), .Y_POS(y_pos), .color(color));
+PmodJSTK_Demo joystick(.CLK(clk),.RST(clr),.MISO(MISO),.SW(sw),.SS(SS),.MOSI(MOSI),.SCLK(SCLK), .X_POS(x_pos), .Y_POS(y_pos));
+NERP_demo_top screen(.clk(clk),.clr(clr), .seg(seg), .an(an), .red(red),.green(green),.blue(blue),.hsync(hsync),.vsync(vsync), .X_POS(x_pos), .Y_POS(y_pos), .color(color),.tool_on(tool_on)
+,.size_sel(size_sel)
+);
 
 assign led[1] = tool_on;
 assign led[2] = tool_sel;

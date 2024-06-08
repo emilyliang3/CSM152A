@@ -43,8 +43,8 @@ module PmodJSTK_Demo(
     SS,
     MOSI,
     SCLK,
-	 AN,
-	 SEG,
+//	 AN,
+//	 SEG,
 	 X_POS,
 	 Y_POS
     );
@@ -59,8 +59,8 @@ module PmodJSTK_Demo(
 			output SS;					// Slave Select, Pin 1, Port JA
 			output MOSI;				// Master Out Slave In, Pin 2, Port JA
 			output SCLK;				// Serial Clock, Pin 4, Port JA
-			output [3:0] AN;			// Anodes for Seven Segment Display
-			output [6:0] SEG;			// Cathodes for Seven Segment Display
+//			output [3:0] AN;			// Anodes for Seven Segment Display
+//			output [6:0] SEG;			// Cathodes for Seven Segment Display
             output [9:0] X_POS;
             output [9:0] Y_POS;
 
@@ -110,13 +110,13 @@ module PmodJSTK_Demo(
 			//-----------------------------------------------
 			//  		Seven Segment Display Controller
 			//-----------------------------------------------
-			ssdCtrl DispCtrl(
-					.CLK(CLK),
-					.RST(RST),
-					.DIN(posData),
-					.AN(AN),
-					.SEG(SEG)
-			);
+//			ssdCtrl DispCtrl(
+//					.CLK(CLK),
+//					.RST(RST),
+//					.DIN(posData),
+//					.AN(AN),
+//					.SEG(SEG)
+//			);
 			
 			
 

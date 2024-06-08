@@ -21,8 +21,8 @@
 module NERP_demo_top(
 	input wire clk,			//master clock = 100MHz
 	input wire clr,			//right-most pushbutton for reset
-//	output wire [6:0] seg,	//7-segment display LEDs
-//	output wire [3:0] an,	//7-segment display anode enable
+	output wire [6:0] seg,	//7-segment display LEDs
+	output wire [3:0] an,	//7-segment display anode enable
 //	output wire dp,			//7-segment display decimal point
 	output wire [2:0] red,	//red vga output - 3 bits
 	output wire [2:0] green,//green vga output - 3 bits
@@ -31,7 +31,9 @@ module NERP_demo_top(
 	output wire vsync,			//vertical sync out
 	input wire [9:0] X_POS,
 	input wire [9:0] Y_POS,
-	input wire [2:0] color
+	input wire [2:0] color,
+	input wire tool_on,
+	input wire size_sel
 	);
 
 // 7-segment clock interconnect
@@ -52,25 +54,31 @@ clockdiv U1(
 	);
 
 // 7-segment display controller
-//segdisplay U2(
-//	.segclk(segclk),
-//	.clr(clr),
-//	.seg(seg),
-//	.an(an)
-//	);
-
-// VGA controller
-vga640x480 U3(
-	.dclk(dclk),
+segdisplay U2(
+	.segclk(segclk),
 	.clr(clr),
-	.hsync(hsync),
-	.vsync(vsync),
-	.red(red),
-	.green(green),
-	.blue(blue),
-	.X_POS(X_POS),
-	.Y_POS(Y_POS),
+	.seg(seg),
+	.an(an),
+	.tool_on(tool_on),
+	.size_sel(size_sel),
 	.color(color)
 	);
+
+// VGA controller
+//vga640x480 U3(
+//    .clk(clk),
+//	.dclk(dclk),
+//	.clr(clr),
+//	.hsync(hsync),
+//	.vsync(vsync),
+//	.red(red),
+//	.green(green),
+//	.blue(blue),
+//	.X_POS(X_POS),
+//	.Y_POS(Y_POS),
+//	.color(color),
+//	.tool_on(tool_on),
+//	.size_sel(size_sel)
+//	);
 
 endmodule

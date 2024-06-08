@@ -19,6 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module vga640x480(
+    input wire clk,
 	input wire dclk,			//pixel clock: 25MHz
 	input wire clr,			//asynchronous reset
 //	input wire [1:0] pos,
@@ -29,7 +30,9 @@ module vga640x480(
 	output reg [3:0] blue,	//blue vga output
 	input wire [9:0] X_POS,
     input wire [9:0] Y_POS,
-    input wire [2:0] color
+    input wire [2:0] color,
+    input wire tool_on,
+    input wire size_sel
 	);
 
 // video structure constants
@@ -41,19 +44,19 @@ parameter hbp = 310; 	// end of horizontal back porch
 parameter hfp = 790; 	// beginning of horizontal front porch
 parameter vbp = 31; 		// end of vertical back porch
 parameter vfp = 511; 	// beginning of vertical front porch
-//assign Y_POS = Y_POS/10;
-//assign X_POS = X_POS/10;
-//assign X_POS = X_POS + 4;
-//assign Y_POS = Y_POS - 24;
+
 // active horizontal video is therefore: 784 - 144 = 640
 // active vertical video is therefore: 511 - 31 = 480
 
 // registers for storing the horizontal & vertical counters
 reg [9:0] hc;
 reg [9:0] vc;
+reg [6:0] cursor_X = 23;
+reg [6:0] cursor_Y = 23;
+reg [2:0] width = 1;
+
 
 //wire [1:0] pos;
-
 //assign pos = {550,271};
 // Define color lists
 reg [3:0] color_r [0:7];   // Red color list
@@ -105,7 +108,7 @@ initial begin
 end
 
 // block ram
-reg [2:0] buffer_pixels [0:47][0:47];
+reg [3:0] buffer_pixels [0:47][0:47];
 genvar i, j;
 generate
     // Initialize buffer_red
@@ -116,8 +119,58 @@ generate
             end
         end
     end
+endgenerate
 
-    endgenerate
+always @(posedge size_sel) begin
+    if (width == 3) begin
+        width = 1;
+    end
+    else begin
+        width = width + 1;
+    end
+end
+reg [31:0] counter_cursor = 0;
+reg clk_cursor = 0;
+     always @(posedge clk)
+     
+     begin
+        counter_cursor <= (counter_cursor == 1666666) ? 0 : counter_cursor + 1;
+        if (counter_cursor == 0)
+            clk_cursor <= ~clk_cursor;    
+     end
+ always @(posedge clk_cursor)
+ begin
+    if (X_POS < 350 && cursor_X >= width) begin
+        cursor_X <= cursor_X - width;
+    end
+    if (Y_POS < 350 && cursor_Y >= width) begin
+        cursor_Y <= cursor_Y - width;
+    end
+    if (X_POS > 650 && cursor_X <= (47-width)) begin
+        cursor_X <= cursor_X + width;
+    end
+    if (Y_POS > 650 && cursor_Y <= (47-width)) begin
+        cursor_Y <= cursor_Y + width;
+    end
+    if (tool_on == 1) begin
+        buffer_pixels[cursor_X][cursor_Y] <= color;
+//        if (width == 2) begin
+//            buffer_pixels[cursor_X+1][cursor_Y] <= color;
+//            buffer_pixels[cursor_X][cursor_Y+1] <= color;
+//            buffer_pixels[cursor_X+1][cursor_Y+1] <= color;
+//        end
+//        else if (width == 3) begin
+//            buffer_pixels[cursor_X+1][cursor_Y] <= color;
+//            buffer_pixels[cursor_X][cursor_Y+1] <= color;
+//            buffer_pixels[cursor_X+1][cursor_Y+1] <= color;
+//            buffer_pixels[cursor_X+2][cursor_Y] <= color;
+//            buffer_pixels[cursor_X+2][cursor_Y+1] <= color;
+//            buffer_pixels[cursor_X+2][cursor_Y+2] <= color;
+//            buffer_pixels[cursor_X+1][cursor_Y+2] <= color;
+//            buffer_pixels[cursor_X][cursor_Y+2] <= color;
+//        end
+    end
+end
 // Horizontal & vertical counters --
 // this is how we keep track of where we are on the screen.
 always @(posedge dclk or posedge clr)
@@ -159,40 +212,28 @@ assign vsync = (vc < vpulse) ? 0:1;
 always @(*)
 begin
 	// first check if we're within vertical active video range
-    
 	if (vc >= vbp && vc < vfp)
 	begin
 		// display white canvas
         if (hc >= hbp && hc < hfp) begin
-        if (vc/10 >= Y_POS/10 - 24 && vc/10 <= Y_POS/10 - 24 && hc/10 >= X_POS/10 + 4 && hc/10 <= X_POS/10 + 4)
-            begin
-        //        buffer_red[hc/10 - 31][vc/10 - 3] = color_r[2];
-        //        buffer_red[hc/10 - 310][vc/10 - 31] = color_g[2];
-        //        buffer_red[hc/10 - 310][vc/10 - 31] = color_b[2];
-                  buffer_pixels[hc/10 - 31][vc/10 - 3] = color;
-        //          red = color_r[1];
-        //          green = color_g[1];
-        //          blue = color_b[1];
+            if (clr == 1) begin
+                red = color_r[0];
+                green = color_g[0];
+                blue = color_b[0];
             end
-         
-		else if (buffer_pixels[hc/10 - 31][vc/10 - 3] == 3'd0) begin
-		  red = color_r[0];
-		  green = color_g[0];
-		  blue = color_b[0];
-//            red = buffer_red[hc/10 - 31][vc/10 - 3];
- //           green = buffer_green[hc/10 - 31][vc/10 - 3];
-  //          blue = buffer_blue[hc/10 - 31][vc/10 - 3];
-//              red = 4'b0000;
-//              green = 4'b0000;
-//              blue = 4'b0000;
-        end
-        else begin
-            red = color_r[1];
-            green = color_g[1];
-            blue = color_b[1];
-        end
-              
-
+            else if (hc/10 - 31 == cursor_X && vc/10 - 3 == cursor_Y) begin
+                    red = color_r[color];
+                    green = color_g[color];
+                    blue = color_b[color];
+            end
+            else begin
+//                if (clr == 1) begin
+//                    buffer_pixels[hc/10 - 31][vc/10 - 3] = 3'd0;
+//                end
+                red = color_r[buffer_pixels[hc/10 - 31][vc/10 - 3]];
+                green = color_g[buffer_pixels[hc/10 - 31][vc/10 - 3]];
+                blue = color_b[buffer_pixels[hc/10 - 31][vc/10 - 3]];
+            end
 		end
 		// we're outside active horizontal range so display black
 		else
@@ -203,13 +244,11 @@ begin
 		end
 	end
 	// we're outside active vertical range so display black
-	else
-	begin
+	else begin
 		red = 0;
 		green = 0;
 		blue = 0;
 	end
-
 end
 
 endmodule
