@@ -1,4 +1,8 @@
 `timescale 1ns / 1ps
+
+// CREDIT FOR THIS FILE GOES TO DEMO VGA CODE FROM BRUINLEARN (not sure how to link a zip file)
+// We used the same parameters but modified it to fit our use cases
+
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
