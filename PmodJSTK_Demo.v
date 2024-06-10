@@ -1,4 +1,8 @@
 `timescale 1ns / 1ps
+
+// CREDIT FOR THIS FILE GOES TO: https://www.instructables.com/How-to-Use-the-PmodJSTK-With-the-Basys3-FPGA/
+// We modified it to output XPOS and YPOS
+
 //////////////////////////////////////////////////////////////////////////////////
 // Company: Digilent Inc.
 // Engineer: Josh Sackos
